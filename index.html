@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Finance Tracker</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="app-header">
+    <div>
+      <p class="eyebrow">Personal Finance</p>
+      <h1>Money Flow Tracker</h1>
+      <p class="subtitle">Track recurring bills, grocery runs, and every in-app purchase across all accounts.</p>
+    </div>
+    <div class="header-actions">
+      <button id="seedDemo" class="secondary">Load sample data</button>
+      <button id="clearAll" class="danger">Clear all</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="card">
+      <h2>Add transaction</h2>
+      <form id="transactionForm" class="transaction-form">
+        <label>
+          Description
+          <input type="text" name="description" placeholder="Grocery store, Netflix, App Store" required />
+        </label>
+        <label>
+          Amount
+          <input type="number" name="amount" step="0.01" placeholder="0.00" required />
+        </label>
+        <label>
+          Type
+          <select name="type" required>
+            <option value="expense">Expense</option>
+            <option value="income">Income</option>
+          </select>
+        </label>
+        <label>
+          Category
+          <select name="category" required>
+            <option value="Groceries">Groceries</option>
+            <option value="Bills">Bills</option>
+            <option value="Subscriptions">Subscriptions</option>
+            <option value="Transportation">Transportation</option>
+            <option value="Entertainment">Entertainment</option>
+            <option value="Dining">Dining</option>
+            <option value="Shopping">Shopping</option>
+            <option value="Savings">Savings</option>
+            <option value="Health">Health</option>
+            <option value="Misc">Misc</option>
+          </select>
+        </label>
+        <label>
+          Account
+          <input type="text" name="account" placeholder="Checking, Credit Card, Cash" required />
+        </label>
+        <label>
+          Date
+          <input type="date" name="date" required />
+        </label>
+        <label class="checkbox">
+          <input type="checkbox" name="recurring" />
+          Recurring transaction
+        </label>
+        <label class="full-width">
+          Notes
+          <textarea name="notes" rows="2" placeholder="Optional notes or tags"></textarea>
+        </label>
+        <button type="submit" class="primary">Add transaction</button>
+      </form>
+    </section>
+
+    <section class="grid">
+      <div class="card summary">
+        <h2>Overview</h2>
+        <div class="summary-grid">
+          <div>
+            <p class="label">Balance</p>
+            <p class="value" id="balanceValue">$0.00</p>
+          </div>
+          <div>
+            <p class="label">Total income</p>
+            <p class="value positive" id="incomeValue">$0.00</p>
+          </div>
+          <div>
+            <p class="label">Total expenses</p>
+            <p class="value negative" id="expenseValue">$0.00</p>
+          </div>
+          <div>
+            <p class="label">Recurring spend</p>
+            <p class="value" id="recurringValue">$0.00</p>
+          </div>
+        </div>
+        <div class="hint" id="noTransactionsHint">Add a transaction to see your analytics.</div>
+      </div>
+
+      <div class="card">
+        <h2>Spending by category</h2>
+        <div id="categoryStats" class="stat-list"></div>
+      </div>
+
+      <div class="card">
+        <h2>Accounts snapshot</h2>
+        <div id="accountStats" class="stat-list"></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="transaction-header">
+        <h2>All transactions</h2>
+        <div class="filters">
+          <input type="search" id="searchInput" placeholder="Search descriptions or notes" />
+          <select id="typeFilter">
+            <option value="all">All types</option>
+            <option value="income">Income</option>
+            <option value="expense">Expense</option>
+          </select>
+          <select id="categoryFilter">
+            <option value="all">All categories</option>
+          </select>
+        </div>
+      </div>
+      <div id="transactionList" class="transaction-list"></div>
+    </section>
+  </main>
+
+  <template id="transactionItemTemplate">
+    <div class="transaction-item">
+      <div>
+        <p class="item-title"></p>
+        <p class="item-subtitle"></p>
+      </div>
+      <div class="item-meta">
+        <span class="item-tag"></span>
+        <span class="item-amount"></span>
+      </div>
+    </div>
+  </template>
+
+  <script src="script.js"></script>
+</body>
+</html>
