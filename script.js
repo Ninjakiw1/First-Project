@@ -22,6 +22,10 @@ const formatCurrency = (value) =>
     value
   );
 
+const createId = () =>
+  globalThis.crypto?.randomUUID?.() ??
+  `txn-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+
 const formatDate = (dateString) =>
   new Date(dateString).toLocaleDateString("en-US", {
     month: "short",
@@ -29,8 +33,17 @@ const formatDate = (dateString) =>
     year: "numeric",
   });
 
+let storageAvailable = true;
+
 const loadTransactions = () => {
-  const raw = localStorage.getItem(STORAGE_KEY);
+  let raw = null;
+  try {
+    raw = localStorage.getItem(STORAGE_KEY);
+  } catch (error) {
+    storageAvailable = false;
+    console.warn("Local storage unavailable, running in memory only.", error);
+    return [];
+  }
   if (!raw) {
     return [];
   }
@@ -43,7 +56,15 @@ const loadTransactions = () => {
 };
 
 const saveTransactions = (transactions) => {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
+  if (!storageAvailable) {
+    return;
+  }
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
+  } catch (error) {
+    storageAvailable = false;
+    console.warn("Local storage unavailable, running in memory only.", error);
+  }
 };
 
 let transactions = loadTransactions();
@@ -189,7 +210,7 @@ form.addEventListener("submit", (event) => {
   const formData = new FormData(form);
 
   const transaction = {
-    id: crypto.randomUUID(),
+    id: createId(),
     description: formData.get("description"),
     amount: Math.abs(Number(formData.get("amount"))),
     type: formData.get("type"),
@@ -212,7 +233,7 @@ form.addEventListener("submit", (event) => {
 seedDemoButton.addEventListener("click", () => {
   const sample = [
     {
-      id: crypto.randomUUID(),
+      id: createId(),
       description: "Monthly paycheck",
       amount: 4200,
       type: "income",
@@ -223,7 +244,7 @@ seedDemoButton.addEventListener("click", () => {
       notes: "Employer direct deposit",
     },
     {
-      id: crypto.randomUUID(),
+      id: createId(),
       description: "Rent payment",
       amount: 1650,
       type: "expense",
@@ -234,7 +255,7 @@ seedDemoButton.addEventListener("click", () => {
       notes: "Autopay",
     },
     {
-      id: crypto.randomUUID(),
+      id: createId(),
       description: "Grocery store",
       amount: 184.32,
       type: "expense",
@@ -245,7 +266,7 @@ seedDemoButton.addEventListener("click", () => {
       notes: "Weekly stock-up",
     },
     {
-      id: crypto.randomUUID(),
+      id: createId(),
       description: "Streaming bundle",
       amount: 24.99,
       type: "expense",
@@ -256,7 +277,7 @@ seedDemoButton.addEventListener("click", () => {
       notes: "Entertainment",
     },
     {
-      id: crypto.randomUUID(),
+      id: createId(),
       description: "In-app game purchase",
       amount: 6.99,
       type: "expense",
