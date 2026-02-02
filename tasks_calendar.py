@@ -194,20 +194,38 @@ class TaskCalendarGUI:
         date_var = tk.StringVar()
         status_var = tk.StringVar(value="All")
 
-        ttk.Label(filters, text="Date (YYYY-MM-DD):").grid(row=0, column=0, sticky="w")
+        ttk.Label(filters, text="Date (YYYY-MM-DD):").grid(
+            row=0, column=0, sticky="w"
+        )
         date_entry = ttk.Entry(filters, textvariable=date_var, width=18)
         date_entry.grid(row=1, column=0, sticky="we", padx=(0, 10))
 
-        ttk.Label(filters, text="Status:").grid(row=0, column=1, sticky="w")
-        status_combo = ttk.Combobox(
+        def clear_date() -> None:
+            date_var.set("")
+            apply_filters()
+
+        ttk.Button(
             filters,
-            textvariable=status_var,
-            values=("All", "Completed", "Not Completed"),
-            state="readonly",
+            text="Clear Date Filter",
+            command=clear_date,
             width=18,
-        )
-        status_combo.grid(row=1, column=1, sticky="we")
-        status_combo.current(0)
+        ).grid(row=2, column=0, sticky="w", pady=(4, 0))
+
+        style = ttk.Style(window)
+        style.configure("Filter.TRadiobutton", indicatoron=False, padding=4)
+
+        status_frame = ttk.Frame(filters)
+        status_frame.grid(row=0, column=1, rowspan=3, sticky="nsew")
+        ttk.Label(status_frame, text="Status:").pack(anchor="w")
+
+        status_buttons = ttk.Frame(status_frame)
+        status_buttons.pack(fill=tk.X, pady=(4, 0))
+
+        status_options = [
+            ("All Tasks", "All"),
+            ("Completed", "Completed"),
+            ("Pending", "Not Completed"),
+        ]
 
         filters.columnconfigure(0, weight=1)
         filters.columnconfigure(1, weight=1)
@@ -256,6 +274,18 @@ class TaskCalendarGUI:
             if not displayed_tasks:
                 status_label.config(text="No tasks match the selected filters.")
 
+        for text, value in status_options:
+            ttk.Radiobutton(
+                status_buttons,
+                text=text,
+                value=value,
+                variable=status_var,
+                command=apply_filters,
+                style="Filter.TRadiobutton",
+            ).pack(side=tk.LEFT, expand=True, fill=tk.X, padx=2)
+
+        date_entry.bind("<Return>", lambda _: apply_filters())
+
         def mark_completed() -> None:
             selection = tasks_box.curselection()
             if not selection:
@@ -272,7 +302,7 @@ class TaskCalendarGUI:
         buttons = ttk.Frame(frame)
         buttons.pack(fill=tk.X, pady=(10, 0))
 
-        ttk.Button(buttons, text="Apply Filters", command=apply_filters).pack(
+        ttk.Button(buttons, text="Refresh List", command=apply_filters).pack(
             side=tk.LEFT
         )
         ttk.Button(

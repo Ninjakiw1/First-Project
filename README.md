@@ -4,7 +4,7 @@ A desktop-friendly task calendar that lets you add, review, and complete dated t
 
 ## Features
 - Add tasks to any day using a guided dialog.
-- Browse every scheduled task in date order with quick filters for specific days and completion status, then mark items done.
+- Browse every scheduled task in date order with quick filters for specific days and button toggles for completion status, then mark items done.
 - Explore a color-coded monthly calendar that highlights days with pending or completed work.
 - Persistent storage in `tasks.json` so your tasks stay available between sessions.
 
