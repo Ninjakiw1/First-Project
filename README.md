@@ -22,3 +22,7 @@ A desktop-friendly task calendar that lets you add, review, and complete dated t
 - **Green cells** – every task on that day is complete.
 
 Your data is saved automatically in `tasks.json` in the project directory.
+
+## Troubleshooting
+
+If you encounter the message `stream disconnected before completion: Your input exceeds the context window of this model` while working with an AI assistant, refer to [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for guidance on trimming the request so it fits within the model's context limit.
