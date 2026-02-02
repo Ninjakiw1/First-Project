@@ -61,6 +61,22 @@ class TaskCalendar:
     def list_tasks(self, task_date: date) -> List[Task]:
         return self.tasks.get(task_date.isoformat(), [])
 
+    def iter_tasks(self) -> List[tuple[date, int, Task]]:
+        """Return all tasks sorted by date with their index on that date."""
+
+        items: List[tuple[date, int, Task]] = []
+        for day_key, tasks in self.tasks.items():
+            try:
+                day_date = date.fromisoformat(day_key)
+            except ValueError:
+                # Skip malformed keys silently; they cannot be mapped to dates.
+                continue
+            for idx, task in enumerate(tasks):
+                items.append((day_date, idx, task))
+
+        items.sort(key=lambda item: item[0])
+        return items
+
     def mark_task_completed(self, task_date: date, index: int) -> bool:
         tasks = self.list_tasks(task_date)
         if 0 <= index < len(tasks):
@@ -166,65 +182,104 @@ class TaskCalendarGUI:
     def open_view_tasks_window(self) -> None:
         window = tk.Toplevel(self.root)
         window.title("Task List")
-        window.geometry("360x320")
+        window.geometry("420x360")
         window.resizable(False, False)
 
         frame = ttk.Frame(window, padding=15)
         frame.pack(fill=tk.BOTH, expand=True)
 
-        date_var = tk.StringVar()
-        ttk.Label(frame, text="Date (YYYY-MM-DD):").pack(anchor="w")
-        date_entry = ttk.Entry(frame, textvariable=date_var)
-        date_entry.pack(fill=tk.X, pady=(0, 10))
+        filters = ttk.Frame(frame)
+        filters.pack(fill=tk.X, pady=(0, 10))
 
-        tasks_box = tk.Listbox(frame, height=8)
+        date_var = tk.StringVar()
+        status_var = tk.StringVar(value="All")
+
+        ttk.Label(filters, text="Date (YYYY-MM-DD):").grid(row=0, column=0, sticky="w")
+        date_entry = ttk.Entry(filters, textvariable=date_var, width=18)
+        date_entry.grid(row=1, column=0, sticky="we", padx=(0, 10))
+
+        ttk.Label(filters, text="Status:").grid(row=0, column=1, sticky="w")
+        status_combo = ttk.Combobox(
+            filters,
+            textvariable=status_var,
+            values=("All", "Completed", "Not Completed"),
+            state="readonly",
+            width=18,
+        )
+        status_combo.grid(row=1, column=1, sticky="we")
+        status_combo.current(0)
+
+        filters.columnconfigure(0, weight=1)
+        filters.columnconfigure(1, weight=1)
+
+        tasks_box = tk.Listbox(frame, height=10)
         tasks_box.pack(fill=tk.BOTH, expand=True)
 
         status_label = ttk.Label(frame, text="")
         status_label.pack(fill=tk.X, pady=(5, 0))
 
-        def load_tasks() -> None:
+        displayed_tasks: List[tuple[date, int]] = []
+
+        def apply_filters() -> None:
             tasks_box.delete(0, tk.END)
             status_label.config(text="")
-            try:
-                selected_date = datetime.strptime(date_var.get(), "%Y-%m-%d").date()
-            except ValueError:
-                messagebox.showerror(
-                    "Task List", "Please enter a valid date in YYYY-MM-DD format."
-                )
-                return
+            displayed_tasks.clear()
 
-            tasks = self.calendar.list_tasks(selected_date)
-            if not tasks:
-                status_label.config(text="No tasks for the selected date.")
-                return
+            filter_text = date_var.get().strip()
+            filter_date = None
+            if filter_text:
+                try:
+                    filter_date = datetime.strptime(filter_text, "%Y-%m-%d").date()
+                except ValueError:
+                    messagebox.showerror(
+                        "Task List", "Please enter a valid date in YYYY-MM-DD format."
+                    )
+                    return
 
-            for idx, task in enumerate(tasks, start=1):
+            status_filter = status_var.get()
+
+            for task_date, idx, task in self.calendar.iter_tasks():
+                if filter_date and task_date != filter_date:
+                    continue
+                if status_filter == "Completed" and not task.completed:
+                    continue
+                if status_filter == "Not Completed" and task.completed:
+                    continue
+
                 status = "✓" if task.completed else "✗"
-                tasks_box.insert(tk.END, f"{idx}. [{status}] {task.description}")
+                tasks_box.insert(
+                    tk.END,
+                    f"{task_date.isoformat()}  [{status}] {task.description}",
+                )
+                displayed_tasks.append((task_date, idx))
+
+            if not displayed_tasks:
+                status_label.config(text="No tasks match the selected filters.")
 
         def mark_completed() -> None:
-            try:
-                selected_date = datetime.strptime(date_var.get(), "%Y-%m-%d").date()
-            except ValueError:
-                messagebox.showerror(
-                    "Task List", "Please enter a valid date in YYYY-MM-DD format."
-                )
-                return
-
             selection = tasks_box.curselection()
             if not selection:
                 messagebox.showwarning("Task List", "Select a task to mark as completed.")
                 return
 
-            if self.calendar.mark_task_completed(selected_date, selection[0]):
+            task_date, idx = displayed_tasks[selection[0]]
+            if self.calendar.mark_task_completed(task_date, idx):
                 messagebox.showinfo("Task List", "Task marked as completed.")
-                load_tasks()
+                apply_filters()
             else:
                 messagebox.showerror("Task List", "Unable to mark the task as completed.")
 
-        ttk.Button(frame, text="Load Tasks", command=load_tasks).pack(pady=(10, 5))
-        ttk.Button(frame, text="Mark Selected Completed", command=mark_completed).pack()
+        buttons = ttk.Frame(frame)
+        buttons.pack(fill=tk.X, pady=(10, 0))
+
+        ttk.Button(buttons, text="Apply Filters", command=apply_filters).pack(
+            side=tk.LEFT
+        )
+        ttk.Button(
+            buttons, text="Mark Selected Completed", command=mark_completed
+        ).pack(side=tk.RIGHT)
+
+        apply_filters()
 
     def open_view_calendar_window(self) -> None:
         window = tk.Toplevel(self.root)
