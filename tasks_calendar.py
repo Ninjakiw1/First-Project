@@ -191,34 +191,14 @@ class TaskCalendarGUI:
         filters = ttk.Frame(frame)
         filters.pack(fill=tk.X, pady=(0, 10))
 
-        date_var = tk.StringVar()
         status_var = tk.StringVar(value="All")
 
-        ttk.Label(filters, text="Date (YYYY-MM-DD):").grid(
-            row=0, column=0, sticky="w"
-        )
-        date_entry = ttk.Entry(filters, textvariable=date_var, width=18)
-        date_entry.grid(row=1, column=0, sticky="we", padx=(0, 10))
-
-        def clear_date() -> None:
-            date_var.set("")
-            apply_filters()
-
-        ttk.Button(
-            filters,
-            text="Clear Date Filter",
-            command=clear_date,
-            width=18,
-        ).grid(row=2, column=0, sticky="w", pady=(4, 0))
+        ttk.Label(filters, text="Status:").pack(anchor="w")
 
         style = ttk.Style(window)
         style.configure("Filter.TRadiobutton", indicatoron=False, padding=4)
 
-        status_frame = ttk.Frame(filters)
-        status_frame.grid(row=0, column=1, rowspan=3, sticky="nsew")
-        ttk.Label(status_frame, text="Status:").pack(anchor="w")
-
-        status_buttons = ttk.Frame(status_frame)
+        status_buttons = ttk.Frame(filters)
         status_buttons.pack(fill=tk.X, pady=(4, 0))
 
         status_options = [
@@ -226,9 +206,6 @@ class TaskCalendarGUI:
             ("Completed", "Completed"),
             ("Pending", "Not Completed"),
         ]
-
-        filters.columnconfigure(0, weight=1)
-        filters.columnconfigure(1, weight=1)
 
         tasks_box = tk.Listbox(frame, height=10)
         tasks_box.pack(fill=tk.BOTH, expand=True)
@@ -243,22 +220,9 @@ class TaskCalendarGUI:
             status_label.config(text="")
             displayed_tasks.clear()
 
-            filter_text = date_var.get().strip()
-            filter_date = None
-            if filter_text:
-                try:
-                    filter_date = datetime.strptime(filter_text, "%Y-%m-%d").date()
-                except ValueError:
-                    messagebox.showerror(
-                        "Task List", "Please enter a valid date in YYYY-MM-DD format."
-                    )
-                    return
-
             status_filter = status_var.get()
 
             for task_date, idx, task in self.calendar.iter_tasks():
-                if filter_date and task_date != filter_date:
-                    continue
                 if status_filter == "Completed" and not task.completed:
                     continue
                 if status_filter == "Not Completed" and task.completed:
@@ -283,8 +247,6 @@ class TaskCalendarGUI:
                 command=apply_filters,
                 style="Filter.TRadiobutton",
             ).pack(side=tk.LEFT, expand=True, fill=tk.X, padx=2)
-
-        date_entry.bind("<Return>", lambda _: apply_filters())
 
         def mark_completed() -> None:
             selection = tasks_box.curselection()
